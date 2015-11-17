@@ -23,10 +23,10 @@ def get_hosts_list(filename):
     return hosts_list
 
 
-def get_web_containers(docker_host):
+def get_web_containers(docker_host, app_name):
     web_containers_list = []
     for container in docker_host.containers():
-        if out.split()[1] in container['Names'][0] and 'web' in container['Command']:
+        if app_name in container['Names'][0] and 'web' in container['Command']:
             web_containers_list.append(container)
     return web_containers_list
 
@@ -45,14 +45,14 @@ if __name__ == '__main__':
         verify=path.expanduser('~/.docker/ca.pem'))
 
     cluster = []
+
     for host_url in get_hosts_list(path.expanduser('~/.docker/deis_hosts')):
-        print 'https://{}:2376'.format(host_url)
         cluster.append(docker.Client(base_url='https://{}:2376'.format(host_url), tls=tls_config, version='auto'))
 
     target_container = None
 
     for host in cluster:
-        web_containers = get_web_containers(host)
+        web_containers = get_web_containers(host, out.split()[1])
         if len(web_containers) != 0:
             target_container = web_containers[0]
             target_host = host
